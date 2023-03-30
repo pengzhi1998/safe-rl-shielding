@@ -82,7 +82,7 @@ for a in open(parameterFileName,"r").readlines():
         posEqual = a.index("=")
         allParams[a[0:posEqual].strip()] = a[posEqual+1:].strip()
 
-# ==================================            
+# ==================================
 # Parse parameter file
 # ==================================
 initX = int(allParams["initX"])
@@ -126,7 +126,7 @@ if shield_options > 0:
 
 else:
     from no_shield import Shield
-    
+
 
 
 xsize = pngfile.size[0]
@@ -136,13 +136,13 @@ palette = pngfile.getpalette()
 
 # for i in range(len(imageData)):
 #     print (imageData[i])
-    
+
 if "colorOrder" in allParams:
     colors = eval(allParams["colorOrder"])
 else:
     assert(max(imageData) == NUMBER_OF_COLORS + 1)
     colors = range(max(imageData) + 1)
-    colors.remove(WALL) 
+    colors.remove(WALL)
     colors.remove(NORMAL_FIELD)
 
 # ==================================
@@ -153,7 +153,7 @@ for xA in range(0,xsize):
     for yA in range(0,ysize):
         for (csf,payoff) in [(x, 0) for x in range(NUMBER_OF_COLORS)] + [(0,1)]:
             if (imageData[xA+yA*xsize]!=WALL):
-                stateNum = len(stateMapper)                    
+                stateNum = len(stateMapper)
                 stateMapper[(xA,yA,csf,payoff)] = stateNum
 
 # print (stateMapper)
@@ -189,7 +189,7 @@ def computeSuccs(xpos,ypos,direction):
         succs = [(xpos-1,ypos),(xpos-1,ypos-1)]
     elif (direction==3):
         succs = [(xpos,ypos-1),(xpos+1,ypos-1)]
-    
+
     if succs[0][0]<0:
         errorProb += 1-positionUpdateNoise
     elif succs[0][0]>=xsize:
@@ -214,10 +214,10 @@ def computeSuccs(xpos,ypos,direction):
 
     if errorProb>0.0:
         finalSuccs.append((-1,-1,errorProb))
-        
+
     return finalSuccs
-    
-                        
+
+
 # Iterate over all cells and compute transition probabilities
 transitionLines = []
 overallNofTransitions = 0
@@ -246,13 +246,13 @@ for xA in range(0,xsize):
                                 csfPrime = 0
                             else:
                                 payoffPrime = 0
-                                
+
                             # transitionLines.append([sourceState,dirA,stateMapper[(destXA,destYA,csfPrime,payoffPrime)],probA*0.99999])
                             transitionLines.append([sourceState,dirA,stateMapper[(destXA,destYA,csfPrime,payoffPrime)],probA])
                     # errorProb += 0.00001*(1-errorProb)
                     if errorProb>0:
                         transitionLines.append([sourceState,dirA,errorState,errorProb])
-     
+
 # ==================================
 # Prepare reverse state mapper and
 # Searchable transition list
@@ -266,8 +266,8 @@ for (a,b,c,d) in transitionLines:
         transitionLists[(a,b)] = [(c,d)]
     else:
         transitionLists[(a,b)].append((c,d))
-        
-NUMBER_OF_BITS = int(math.ceil(math.log((len(reverseStateMapper) - 1) / (NUMBER_OF_COLORS + 1), 2))) 
+
+NUMBER_OF_BITS = int(math.ceil(math.log((len(reverseStateMapper) - 1) / (NUMBER_OF_COLORS + 1), 2)))
 # print ("Number of bits for states:", NUMBER_OF_BITS)
 danger_zone = [(7, 6), (7, 7), (7, 8), (8, 6), (8, 7), (8, 8), (9, 6), (9, 7), (9, 8)]
 max_steps_in_zone = 3
@@ -288,7 +288,7 @@ if gen_spec:
     with open("avoid_walls_shield.dfa", "w") as file:
         directions = [0, 1, 2, 3]
         transitions = []
-        
+
         for combination in sum([list(map(list, itertools.combinations(directions, i))) for i in range(5)], []):
             sensors_enc = [str(x + 1 if x in combination else -(x + 1)) for x in directions]
             for action in range(4):
@@ -302,26 +302,26 @@ if gen_spec:
         for action in range(5, 8):
             action_enc = [str(-(idx + 5) if x == '0' else (idx + 5)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
             transitions.append("1 2 {0}\n".format(" ".join(action_enc)))
-            
+
         # print 'bad' state loop
         transitions.append("2 2\n")
-            
+
         #print header & start/end states
         file.write("dfa 2 4 3 1 1 {0}\n1\n2\n".format(len(transitions)))
-        
+
         #print transitions
-        file.write("".join(transitions))        
+        file.write("".join(transitions))
         file.write("1 sensor_right\n")
         file.write("2 sensor_down\n")
         file.write("3 sensor_left\n")
         file.write("4 sensor_up\n")
-        
+
         for bit in range(1, 4):
             file.write("{0} o{1}\n".format(4 + bit, 4 - bit))
-        
-    
-   
-            
+
+
+
+
     #shield preventing collision with second robot
     with open("enemy_shield.dfa", "w") as file:
         #
@@ -332,7 +332,7 @@ if gen_spec:
         # x x x x x  5 10 15 20 25
         #
         # state 0 means no enemy in range
-        
+
         transitions = []
         unused_states = [0, 13]
         for (enemy_x, enemy_y) in list(product(range(1, 6), repeat=2)):
@@ -348,72 +348,72 @@ if gen_spec:
                 for enemy_action in range(5):
                     enemy_next = filter(lambda t: t[0] != -1, list(map(lambda t: (t[0], t[1]) if t[2] > 0 else (-1, -1), computeSuccs(enemy_x, enemy_y, enemy_action))))
                     next = filter(lambda t: t[0] != -1, list(map(lambda t: (t[0], t[1]) if t[2] > 0 else (-1, -1), computeSuccs(3, 3, action))))
-                
+
                     intersection = set(next).intersection(set(enemy_next))
                     if len(intersection) > 0:
                         action_allowed = False
                         break
                 state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(enemy_state)[2:].rjust(num_state_bits, '0')))]
                 action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-                
+
                 transitions.append("1 {0} {1} {2}\n".format(1 if action_allowed else 2, " ".join(state_enc), " ".join(action_enc)))
-                
+
         action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(4)[2:].rjust(3, '0')))]
         transitions.append("1 1 " + " ".join(action_enc) + "\n")
-  #              
+  #
         #print unused action transitions
         for action in range(5, 8):
             action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
             transitions.append("1 2 " + " ".join(action_enc) + "\n")
-        
+
         for state in unused_states:
             state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
             transitions.append("1 1 " + " ".join(state_enc) + "\n")
-        
+
         #print ununsed state transitions
         for state in range(26, int(math.pow(2, num_state_bits))):
             state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
             transitions.append("1 1 " + " ".join(state_enc) + "\n")
-        
+
         #print final state transition
         transitions.append("2 2\n")
-        
+
         # print header
         file.write("dfa 2 {0} 3 1 1 {1}\n1\n2\n".format(num_state_bits, len(transitions)))
-        
+
         #print transitions
         for transition in transitions:
             file.write(transition)
-                
+
         # print labels
         for bit in range(1, num_state_bits + 1):
             file.write("{0} e{1}\n".format(bit, num_state_bits + 1 - bit))
         for bit in range(1, 4):
             file.write("{0} o{1}\n".format(num_state_bits + bit, 4 - bit))
-        
+
     with open("bomb_shield.dfa", "w") as file:
-        
+
         transitions = []
         for state in range(1, num_steps_on_bomb + 1):
             transitions.append("{0} 1 -1".format(state))
-            
+
             actions = range(8)
             actions.remove(4) # remove stay
             for action in actions:
                 action_enc = [str(-(idx + 2) if x == '0' else (idx + 2)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
                 transitions.append("{0} 1 1 {1}".format(state, " ".join(action_enc)))
-            
+
             action_enc = [str(-(idx + 2) if x == '0' else (idx + 2)) for idx, x in enumerate(list(bin(4)[2:].rjust(3, '0')))]
             transitions.append("{0} {1} 1 {2}".format(state, state + 1, " ".join(action_enc)))
-            
+
         transitions.append("{0} {0}".format(num_steps_on_bomb + 1))
-                
+
         file.write("dfa {0} 1 3 1 1 {1}\n1\n{0}\n".format(num_steps_on_bomb + 1, len(transitions)))
         file.write("\n".join(transitions))
         file.write("\n1 b\n")
         for bit in range(1, 4):
             file.write("{0} o{1}\n".format(1 + bit, 4 - bit))
-    
+
     #shield for danger zones
     with open("danger_zone_shield.dfa", "w") as file:
         zone = set(danger_zone)
@@ -437,12 +437,12 @@ if gen_spec:
                         break
                 if at_boundary:
                    zones[current_zone].add((x,y))
-                    
+
             zone -= zones[current_zone]
             current_zone += 1
-        
+
         # print (zones)
-        
+
         end_state = max_steps_in_zone + 1
         transitions = []
         num_state_bits = 7
@@ -456,7 +456,7 @@ if gen_spec:
                     if (x,y) in zone:
                         zone_idx = idx
                         break
-        
+
                 if zone_idx == 0:
                     transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
                     continue
@@ -464,7 +464,7 @@ if gen_spec:
                 if zone_idx < max_acceptable_zone or max(zones.keys()) <= max_acceptable_zone:
                     transitions.append("{0} {1} {2}\n".format(num_steps_in_zone, num_steps_in_zone + 1, " ".join(state_enc)))
                     continue
-                
+
                 print( "max_zone: " + str(max_acceptable_zone))
                 if zone_idx <= max_acceptable_zone + 1:
                     for action in range(5):
@@ -482,34 +482,34 @@ if gen_spec:
                     for action in range(5,8):
                         action_enc = [str(-(idx + 1 + num_state_bits) if bit == '0' else (idx + 1 + num_state_bits)) for idx, bit in enumerate(list(bin(action)[2:].rjust(3, '0')))]
                         transitions.append("{0} {1} {2} {3}\n".format(num_steps_in_zone, end_state, " ".join(state_enc), " ".join(action_enc)))
-                        
+
                     continue
-                
+
                 # this should never happen .. do whatever we want to
                 transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
-          
+
             #print ununsed state transitions
             for state in xrange((len(reverseStateMapper) - 1) / 5, int(math.pow(2, num_state_bits))):
                 state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
                 transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
-             
-            
+
+
         transitions.append("{0} {0}\n".format(end_state))
         # print header
         file.write("dfa {0} {1} 3 1 1 {2}\n1\n{0}\n".format(num_steps_in_zone + 1, num_state_bits, len(transitions)))
-        
+
         #print transitions
         for transition in transitions:
             file.write(transition)
-                
+
         # print labels
         for bit in range(1, num_state_bits + 1):
             file.write("{0} i{1}\n".format(bit, num_state_bits + 1 - bit))
         for bit in range(1, 4):
             file.write("{0} o{1}\n".format(num_state_bits + bit, 4 - bit))
-                
+
     exit()
-        
+
 # =========================================
 # Initialize interactive display
 # =========================================
@@ -522,29 +522,29 @@ MAGNIFY = min(MAGNIFY,displayInfo.current_h*3/4/ysize)
 class Map(Environment):
     def __init__(self):
         self.reset()
-        
+
     def reset(self):
         # print "reset called"
         self.state = 0
         self.penalty = 0
-        
-    def performAction(self, action):   
+
+    def performAction(self, action):
         error = len(reverseStateMapper) - 1
         # action = int(action[0])
-        
-        
+
+
         actions = action[action != -1]
         actions = list(map(int, actions))
-        
+
         # print action
         # state_enc = map(int, list(bin(self.state / (NUMBER_OF_COLORS + 1))[2:].rjust(NUMBER_OF_BITS, '0')))
-        
+
         encoded_actions = []
         for a in actions:
             encoded_actions.append(list(map(int, list(bin(a)[2:].rjust(3, '0')))))
-            
+
         (robotXA, robotYA, csf, payoff) = reverseStateMapper[self.state]
-        
+
         # simulate sensors
         state_enc = []
         for a in range(4):
@@ -556,11 +556,11 @@ class Map(Environment):
                     valid = False
                     break
             state_enc.append(0 if valid else 1)
-            
-                
+
+
         # print state_enc
  # print "action" + str(encoded_actions[0])
-        
+
         if enemies_enabled:
             enemy_state = 0
             (robotXA,robotYA,csf,payoff) = reverseStateMapper[level.state]
@@ -569,22 +569,22 @@ class Map(Environment):
                 y_diff = abs(enemy[1] - robotYA)
                 if x_diff + y_diff <= 2:
                     enemy_state = (enemy[0] - robotXA + 2) * 5 + (enemy[1] - robotYA + 3)
-                    break        
+                    break
             enemy_state_enc = list(map(int, list(bin(enemy_state)[2:].rjust(5, '0'))))
-        
+
             state_enc.extend(enemy_state_enc)
-                    
+
         # print "Colors seen so far:", csf
         if len(bombs) > 0:
             state_enc.append(1 if (robotXA + 1, robotYA + 1) in bombs else 0)
         for enc_action in encoded_actions:
             state_enc.extend(enc_action)
- 
+
         # print state_enc
         corr_action = shield.tick(state_enc)
 
         # print corr_action
-                
+
         corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)
 
 
@@ -606,16 +606,16 @@ class Map(Environment):
             action = actions[0]
         else:
             action = corr_action
-        
+
         used_actions.append(action)
-        
+
         while len(used_actions) < 5:
             used_actions.append(-1)
-                
+
         agent.lastaction = used_actions
-       
+
         transitionList = transitionLists[(self.state, action)]
-        
+
         dest = None
         randomNumber = random.random()
         for (a,b) in transitionList:
@@ -627,8 +627,8 @@ class Map(Environment):
         # Rounding error?
         if (dest==None):
             dest = transitionList[0][0]
-             
-        if dest == len(reverseStateMapper) - 1: 
+
+        if dest == len(reverseStateMapper) - 1:
             experiment.acc_reward -= 1
             self.penalty += 1
             # self.reset()
@@ -647,19 +647,19 @@ class Map(Environment):
             # Rounding error?
             if (dest==None):
                 dest = transitionList[0][0]
-            
+
         # learner.explorer.n_values.params.reshape(learner.explorer.n_values.numRows,learner.explorer.n_values.numColumns)[self.state, action] += 1
-        
+
         self.state = dest
-            
+
     def getSensors(self):
         return [self.state]
-        
+
 class VisitAllColors(Task):
     def __init__(self, env):
         Task.__init__(self, env)
         self.last_reward = 0
-        
+
     def getReward(self):
         # if (reverseStateMapper[self.env.state][3] != 0):
         # print "all colors visited"
@@ -668,14 +668,14 @@ class VisitAllColors(Task):
         self.env.penalty = 0
         return self.last_reward
 
-        
+
 class MyExperiment(Experiment):
     def __init__(self, task, agent):
         Experiment.__init__(self, task, agent)
-        
+
         agent.learner.explorer.experiment = self
         # agent.learner.module.getValue()
-        
+
         self.screen = pygame.display.set_mode(((xsize+2)*MAGNIFY,(ysize+2)*MAGNIFY))
         pygame.display.set_caption('Policy Visualizer')
         self.clock = pygame.time.Clock()
@@ -683,11 +683,11 @@ class MyExperiment(Experiment):
         self.screenBuffer = pygame.Surface(self.screen.get_size())
         self.screenBuffer = self.screenBuffer.convert()
         self.screenBuffer.fill((64, 64, 64)) # Dark Gray
-        
+
         self.bombImage = pygame.image.load("bomb_image.png")
         self.bombImage = pygame.transform.scale(self.bombImage, (MAGNIFY - 2, MAGNIFY - 2))
 
-    
+
         self.isPaused = False
         self.isCrashed = False
         self.speed = 10
@@ -695,7 +695,7 @@ class MyExperiment(Experiment):
         self.robotXA = -1
         self.robotYA = -1
         self.bomb_counter = 0
-        
+
         self.count = 0
         self.acc_reward = 0
         self.collect_data = False
@@ -703,12 +703,12 @@ class MyExperiment(Experiment):
             self.collect_data = True
             self.collect_episode_data_file = open(collect_data_file + "_episodelen.data", "w")
             self.collect_reward_data_file = open(collect_data_file + "_avg_reward.data", "w")
-    
+
     def _oneInteraction(self):
         global draw
-        
+
         resetInThisRound = False
-        
+
         # Process events
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT or (event.type == pygame.locals.KEYDOWN and event.key in [pygame.locals.K_ESCAPE,pygame.locals.K_q]):
@@ -724,20 +724,20 @@ class MyExperiment(Experiment):
                 self.speed = max(self.speed-1,1)
             if (event.type == pygame.locals.KEYDOWN and event.key == pygame.locals.K_d):
                 draw = not draw
-            
+
         # if self.isCrashed:
   #           self.isCrashed = False
   #           # level.reset()
-  # 
-        # Update 
+  #
+        # Update
         if resetInThisRound:
             print ("reset")
             level.reset()
 
-                
+
         old = (self.robotXA, self.robotYA)
         (self.robotXA,self.robotYA,csf,payoff) = reverseStateMapper[level.state]
-        
+
         if not self.isCrashed and enemies_enabled:
             enemy_handler.update(old)
             for e in enemy_handler.getEnemyPositions():
@@ -749,7 +749,7 @@ class MyExperiment(Experiment):
                         print ("Shields are not allowed to make errors!")
                         exit()
                     break
-        
+
         if (self.robotXA + 1, self.robotYA + 1) in bombs:
             self.bomb_counter += 1
             if self.bomb_counter == 4:
@@ -766,14 +766,14 @@ class MyExperiment(Experiment):
             q_max = 0
             for state in range(len(reverseStateMapper) - 1):
                 q_max = max(q_max, max(controller.getActionValues(state)))
-                
+
             # Draw Field
-            for x in xrange(0,xsize):
-                for y in xrange(0,ysize):
+            for x in range(xsize):
+                for y in range(ysize):
                     paletteColor = imageData[y*xsize+x]
                     color = palette[paletteColor*3:paletteColor*3+3]
                     pygame.draw.rect(self.screenBuffer,color,((x+1)*MAGNIFY,(y+1)*MAGNIFY,MAGNIFY,MAGNIFY),0)
-        
+
             # Draw boundary
             if self.robotXA==-1 or self.isCrashed:
                 boundaryColor = (255,0,0)
@@ -786,8 +786,8 @@ class MyExperiment(Experiment):
             # pygame.draw.rect(screenBuffer,boundaryColor,(0,0,MAGNIFY*(xsize+2),MAGNIFY),0)
 
             # Draw cell frames
-            for x in xrange(0,xsize):
-                for y in xrange(0,ysize):
+            for x in range(xsize):
+                for y in range(ysize):
                     pygame.draw.rect(self.screenBuffer,(0,0,0),((x+1)*MAGNIFY,(y+1)*MAGNIFY,MAGNIFY,MAGNIFY),1)
                     if (x+1,y+1) in bombs:
                         self.screenBuffer.blit(self.bombImage, ((x+1)*MAGNIFY+1,(y+1)*MAGNIFY+1))
@@ -805,7 +805,7 @@ class MyExperiment(Experiment):
                     pygame.draw.circle(self.screenBuffer, (32,32,192), ((e_x+1)*MAGNIFY+MAGNIFY/2,(e_y+1)*MAGNIFY+MAGNIFY/2) , MAGNIFY/3-2, 0)
                     pygame.draw.circle(self.screenBuffer, (255,255,255), ((e_x+1)*MAGNIFY+MAGNIFY/2,(e_y+1)*MAGNIFY+MAGNIFY/2) , MAGNIFY/3-1, 1)
                     pygame.draw.circle(self.screenBuffer, (0,0,0), ((e_x+1)*MAGNIFY+MAGNIFY/2,(e_y+1)*MAGNIFY+MAGNIFY/2) , MAGNIFY/3, 1)
-                
+
 
             # zone_width = danger_zone[-1][0] - danger_zone[0][0] + 1
      #        zone_height = danger_zone[-1][1] - danger_zone[0][1] + 1
@@ -815,7 +815,7 @@ class MyExperiment(Experiment):
             # Flip!
             self.screen.blit(self.screenBuffer, (0, 0))
             pygame.display.flip()
-                                
+
             # Make the transition
             if not self.isPaused:
                 # Done
@@ -834,39 +834,39 @@ class MyExperiment(Experiment):
                 self.acc_reward = 0
             if self.stepid % 100000 == 0:
                 pass
-        
+
         if self.stepid % 100 == 0:
             sys.stdout.write("\033[K")
             sys.stdout.write("[{2}{3}] ({0}/{1}) | alpha = {4} | epsilon = {5}\n".format(self.stepid, MAX_STEPS, '#'*int(math.floor(self.stepid/float(MAX_STEPS)*20)), ' '*int((20 - math.floor(self.stepid/float(MAX_STEPS)*20))), learner.alpha, learner.explorer.exploration))
             sys.stdout.write("\033[F")
-            
-           
-            
-        
+
+
+
+
         if self.stepid >= MAX_STEPS:
             print ("\nSimulation done!")
-            
-            sys.exit()          
-            
+
+            sys.exit()
+
         if payoff > 0:
             # episode done
             if save_file != None:
                 controller.params.reshape(controller.numRows, controller.numColumns).tofile(save_file)
             learner.alpha *= 1.#0.999
             learner.explorer.exploration *= 1.#0.999
-            
+
         self.isCrashed = False
         if not self.isPaused:
             return Experiment._oneInteraction(self)
         else: return self.stepid
 
 
-        
+
 # ==================================
 # Call main program
 # ==================================
 
-    
+
 
 #
 # def enemy_random(enemy, good):
@@ -912,9 +912,9 @@ agent = LearningAgent(controller, learner)
 draw = False
 EXPLORATION_FACTOR = exploration
 
-experiment = MyExperiment(task, agent)  
+experiment = MyExperiment(task, agent)
 while 1:
     experiment.doInteractions(100)
-    
+
     agent.learn()
     agent.reset()
