@@ -903,8 +903,8 @@ gamma = .95
 if not args.sarsa:
     learner = MyQ(alpha, gamma, neg_reward)
     learner.explorer = MyGreedyExplorer(shield_options, exploration)
-elif args.sarsa:
-    learner = SARSA(alpha, gamma)
+# elif args.sarsa:
+#     learner = SARSA(alpha, gamma)
 learner.explorer = MyGreedyExplorer(shield_options, exploration)
 learner.explorer._setModule(controller)
 agent = LearningAgent(controller, learner)
