@@ -260,6 +260,10 @@ for xA in range(0,xsize):
                             # transitionLines.append([sourceState,dirA,stateMapper[(destXA,destYA,csfPrime,payoffPrime)],probA*0.99999])
                             transitionLines.append([sourceState,dirA,stateMapper[(destXA,destYA,csfPrime,payoffPrime)],probA])
                     # errorProb += 0.00001*(1-errorProb)
+                    """
+                    the following code indicates that when there is a probability of error, the agent will go to the 
+                    error state, which is specified as the last state in the stateMapper.
+                    """
                     if errorProb>0:
                         transitionLines.append([sourceState,dirA,errorState,errorProb])
 
@@ -271,6 +275,10 @@ reverseStateMapper = {}
 for (a,b) in stateMapper.items():
     reverseStateMapper[b] = a
 transitionLists = {}
+"""
+the code below is to create a new dictionary (transitionLists) of transitionLines, 
+where the key is the current state and chosen action, and the value is all possible next states and their probabilities.
+"""
 for (a,b,c,d) in transitionLines:
     if not (a,b) in transitionLists:
         transitionLists[(a,b)] = [(c,d)]
