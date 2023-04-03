@@ -93,16 +93,16 @@ NORMAL_FIELD = int(allParams["normalField"])
 NUMBER_OF_COLORS = int(allParams["numberOfColors"])
 
 enemies_enabled = False
-if "enemies" in allParams:
-    try:
-        mode_name = allParams["enemies"]
-        mode_name = path + "." + mode_name[:mode_name.rfind(".py")]
-        enemy_handler = importlib.import_module(mode_name.replace(os.path.sep, ".")).EnemyHandler()
-        enemies_enabled = True
-    except ImportError as e:
-        print ("Could not find file " + enemy_handler_file)
-        print (e)
-        exit()
+# if "enemies" in allParams:
+#     try:
+#         mode_name = allParams["enemies"]
+#         mode_name = path + "." + mode_name[:mode_name.rfind(".py")]
+#         enemy_handler = importlib.import_module(mode_name.replace(os.path.sep, ".")).EnemyHandler()
+#         enemies_enabled = True
+#     except ImportError as e:
+#         print ("Could not find file " + enemy_handler_file)
+#         print (e)
+#         exit()
 
 bombs = []
 if "bombs" in allParams:
@@ -550,10 +550,21 @@ class Map(Environment):
         self.penalty = 0
 
     def performAction(self, action):
-        error = len(reverseStateMapper) - 1
+        error = len(reverseStateMapper) - 1 # error state, 310
         # action = int(action[0])
 
-
+        """
+        two examples:
+        (1)
+        action = [ 4.  0.  3. -1. -1.], actions = [ 4.  0.  3.]
+        actions after map = [4, 0, 3]
+        encoded_actions = [[1, 0, 0], [0, 0, 0], [0, 1, 1]] 
+        
+        (2)
+        action = [ 3.  2.  3. -1. -1.], actions = [ 3.  2.  3.]
+        actions after map = [3, 2, 3]
+        encoded_actions = [[0, 1, 1], [0, 1, 0], [0, 1, 1]] 
+        """
         actions = action[action != -1]
         actions = list(map(int, actions))
 
@@ -582,18 +593,18 @@ class Map(Environment):
         # print state_enc
  # print "action" + str(encoded_actions[0])
 
-        if enemies_enabled:
-            enemy_state = 0
-            (robotXA,robotYA,csf,payoff) = reverseStateMapper[level.state]
-            for enemy in enemy_handler.getEnemyPositions():
-                x_diff = abs(enemy[0] - robotXA)
-                y_diff = abs(enemy[1] - robotYA)
-                if x_diff + y_diff <= 2:
-                    enemy_state = (enemy[0] - robotXA + 2) * 5 + (enemy[1] - robotYA + 3)
-                    break
-            enemy_state_enc = list(map(int, list(bin(enemy_state)[2:].rjust(5, '0'))))
-
-            state_enc.extend(enemy_state_enc)
+        # if enemies_enabled:
+        #     enemy_state = 0
+        #     (robotXA,robotYA,csf,payoff) = reverseStateMapper[level.state]
+        #     for enemy in enemy_handler.getEnemyPositions():
+        #         x_diff = abs(enemy[0] - robotXA)
+        #         y_diff = abs(enemy[1] - robotYA)
+        #         if x_diff + y_diff <= 2:
+        #             enemy_state = (enemy[0] - robotXA + 2) * 5 + (enemy[1] - robotYA + 3)
+        #             break
+        #     enemy_state_enc = list(map(int, list(bin(enemy_state)[2:].rjust(5, '0'))))
+        #
+        #     state_enc.extend(enemy_state_enc)
 
         # print "Colors seen so far:", csf
         if len(bombs) > 0:
