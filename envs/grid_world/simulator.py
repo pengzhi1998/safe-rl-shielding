@@ -560,12 +560,12 @@ class Map(Environment):
         two examples:
         (1)
         action = [ 4.  0.  3. -1. -1.], actions = [ 4.  0.  3.]
-        actions after map = [4, 0, 3]
+        actions after "list(map())" = [4, 0, 3]
         encoded_actions = [[1, 0, 0], [0, 0, 0], [0, 1, 1]] 
         
         (2)
         action = [ 3.  2.  3. -1. -1.], actions = [ 3.  2.  3.]
-        actions after map = [3, 2, 3]
+        actions after "list(map())" = [3, 2, 3]
         encoded_actions = [[0, 1, 1], [0, 1, 0], [0, 1, 1]] 
         """
         actions = action[action != -1]
@@ -621,16 +621,15 @@ class Map(Environment):
         # print state_enc
         corr_action = shield.tick(state_enc)
 
-        # print corr_action
-
-        corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)  # convert a binary number to decimal int
+        """convert a binary number to decimal int"""
+        corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)
 
 
         # if (actions[0] != corr_action) and huge_neg_reward:
         #     self.penalty += 1.
 
-        if (actions[0] != corr_action) and neg_reward and args.sarsa:
-            self.penalty += 0.1
+        # if (actions[0] != corr_action) and neg_reward and args.sarsa:
+        #     self.penalty += 0.1
             # qvalue = self.module.getValue(self.laststate, action)
             # self.module.updateValue(self.laststate, action, qvalue + self.alpha * ((-1 if self.neg_reward else self.lastreward) - qvalue))
             #experiment.acc_reward -= .3
@@ -643,6 +642,7 @@ class Map(Environment):
         if huge_neg_reward:
             action = actions[0]
         else:
+            """this has been executed"""
             action = corr_action
 
         used_actions.append(action)
