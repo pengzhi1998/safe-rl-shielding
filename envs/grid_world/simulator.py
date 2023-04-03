@@ -276,8 +276,11 @@ for (a,b) in stateMapper.items():
     reverseStateMapper[b] = a
 transitionLists = {}
 """
-the code below is to create a new dictionary (transitionLists) of transitionLines, 
+The code below is to create a new dictionary (transitionLists) of transitionLines, 
 where the key is the current state and chosen action, and the value is all possible next states and their probabilities.
+
+You could notice some keys have one value, while some keys have multiple values. This is because in the code above,
+if the probability of going to errorstate is 0, then this transition wouldn't be added to the transitionLines list.
 """
 for (a,b,c,d) in transitionLines:
     if not (a,b) in transitionLists:
