@@ -218,7 +218,10 @@ def computeSuccs(xpos,ypos,direction):
     return finalSuccs
 
 
-# Iterate over all cells and compute transition probabilities
+"""
+Iterate over all cells and compute transition probabilities
+Specifically, this transitionLines list is providing the transition function: [s_t, a_t, s_{t+1}, p(s_t+1|s_t,a_t)]
+"""
 transitionLines = []
 overallNofTransitions = 0
 for xA in range(0,xsize):
@@ -236,6 +239,13 @@ for xA in range(0,xsize):
                         elif (imageData[destXA+destYA*xsize]==WALL):
                             errorProb += probA
                         else:
+                            """
+                            notice that 0 is wall, 5 is normal field (other areas)
+                            and 1-4 are the colors, they are in order: [2, 4, 3, 1] which means if
+                            you have visited color 2, you need to visit color 4 next. Only when the agent has
+                            visited all 4 colors, it can get the payoff (reward). 
+                            Note this is confusing: csf is from 0 to 3, while colors are from 1 to 4.
+                            """
                             if imageData[destXA+destYA*xsize]==colors[csf]:
                                 csfPrime = csf + 1
                                 payoffPrime = 1
