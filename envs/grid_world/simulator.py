@@ -623,7 +623,7 @@ class Map(Environment):
 
         # print corr_action
 
-        corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)
+        corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)  # convert a binary number to decimal int
 
 
         # if (actions[0] != corr_action) and huge_neg_reward:
