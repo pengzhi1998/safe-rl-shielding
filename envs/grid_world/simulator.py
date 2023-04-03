@@ -148,6 +148,9 @@ else:
 # ==================================
 # Construct MDP --> States
 # ==================================
+"""
+Notice this map dictionary doesn't contain any agent positions at the walls.
+"""
 stateMapper = {}
 for xA in range(0,xsize):
     for yA in range(0,ysize):
@@ -580,7 +583,10 @@ class Map(Environment):
         # simulate sensors
         state_enc = []
         for a in range(4):
-            # print computeSuccs(robotXA, robotYA, a)
+            """
+            The filter below is to remove the successors with probability 0.
+            If succ[0] == -1, then the robot is out of the map which is not a valid successor.
+            """
             succs = filter(lambda t: t[2] > 0, computeSuccs(robotXA, robotYA, a))
             valid = True
             for succ in succs:
