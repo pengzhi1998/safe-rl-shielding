@@ -626,8 +626,8 @@ class Map(Environment):
         corr_action = int("".join(list(map(str, corr_action[:len(corr_action) -1]))), 2)
 
 
-        if (actions[0] != corr_action) and huge_neg_reward:
-            self.penalty += 1.
+        # if (actions[0] != corr_action) and huge_neg_reward:
+        #     self.penalty += 1.
 
         if (actions[0] != corr_action) and neg_reward and args.sarsa:
             self.penalty += 0.1
