@@ -298,242 +298,6 @@ max_steps_in_zone = 3
 
 num_steps_on_bomb = 3
 
-# recharging_zone = [(5, 10)]
-# max_steps_in_zone = 20
-# danger_zone = []
-# for state in xrange(0, len(reverseStateMapper) - 1, 5): #exclude error state
-#     (x, y, _, _) = reverseStateMapper[state]
-#     danger_zone.append((x,y))
-
-# danger_zone = [(7, 6), (7, 7), (8, 6), (8, 7)]
-# max_steps_in_zone = 3
-
-if gen_spec:
-    with open("avoid_walls_shield.dfa", "w") as file:
-        directions = [0, 1, 2, 3]
-        transitions = []
-
-        for combination in sum([list(map(list, itertools.combinations(directions, i))) for i in range(5)], []):
-            sensors_enc = [str(x + 1 if x in combination else -(x + 1)) for x in directions]
-            for action in range(4):
-                action_enc = [str(-(idx + 5) if x == '0' else (idx + 5)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-                target_state = 1 if action not in combination else 2
-                transitions.append("1 {0} {1} {2}\n".format(target_state, " ".join(sensors_enc), " ".join(action_enc)))
-        action_enc = [str(-(idx + 5) if x == '0' else (idx + 5)) for idx, x in enumerate(list(bin(4)[2:].rjust(3, '0')))]
-        transitions.append("1 1 {0}\n".format(" ".join(action_enc)))
-
-        #print unused action transitions
-        for action in range(5, 8):
-            action_enc = [str(-(idx + 5) if x == '0' else (idx + 5)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-            transitions.append("1 2 {0}\n".format(" ".join(action_enc)))
-
-        # print 'bad' state loop
-        transitions.append("2 2\n")
-
-        #print header & start/end states
-        file.write("dfa 2 4 3 1 1 {0}\n1\n2\n".format(len(transitions)))
-
-        #print transitions
-        file.write("".join(transitions))
-        file.write("1 sensor_right\n")
-        file.write("2 sensor_down\n")
-        file.write("3 sensor_left\n")
-        file.write("4 sensor_up\n")
-
-        for bit in range(1, 4):
-            file.write("{0} o{1}\n".format(4 + bit, 4 - bit))
-
-
-
-
-    #shield preventing collision with second robot
-    with open("enemy_shield.dfa", "w") as file:
-        #
-        # x x x x x  1  6 11 16 21
-        # x x x x x  2  7 12 17 22
-        # x x o x x  3  8 13 18 23
-        # x x x x x  4  9 14 19 24
-        # x x x x x  5 10 15 20 25
-        #
-        # state 0 means no enemy in range
-
-        transitions = []
-        unused_states = [0, 13]
-        for (enemy_x, enemy_y) in list(product(range(1, 6), repeat=2)):
-            if enemy_x == 3 and enemy_y == 3:
-                continue
-            enemy_state = 5 * (enemy_x - 1) + enemy_y
-            if abs(enemy_x - 3) + abs(enemy_y - 3) > 2:
-                unused_states.append(enemy_state)
-                continue
-            num_state_bits = 5
-            for action in range(4):
-                action_allowed = True
-                for enemy_action in range(5):
-                    enemy_next = filter(lambda t: t[0] != -1, list(map(lambda t: (t[0], t[1]) if t[2] > 0 else (-1, -1), computeSuccs(enemy_x, enemy_y, enemy_action))))
-                    next = filter(lambda t: t[0] != -1, list(map(lambda t: (t[0], t[1]) if t[2] > 0 else (-1, -1), computeSuccs(3, 3, action))))
-
-                    intersection = set(next).intersection(set(enemy_next))
-                    if len(intersection) > 0:
-                        action_allowed = False
-                        break
-                state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(enemy_state)[2:].rjust(num_state_bits, '0')))]
-                action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-
-                transitions.append("1 {0} {1} {2}\n".format(1 if action_allowed else 2, " ".join(state_enc), " ".join(action_enc)))
-
-        action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(4)[2:].rjust(3, '0')))]
-        transitions.append("1 1 " + " ".join(action_enc) + "\n")
-  #
-        #print unused action transitions
-        for action in range(5, 8):
-            action_enc = [str(-(idx + 1 + num_state_bits) if x == '0' else (idx + 1 + num_state_bits)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-            transitions.append("1 2 " + " ".join(action_enc) + "\n")
-
-        for state in unused_states:
-            state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
-            transitions.append("1 1 " + " ".join(state_enc) + "\n")
-
-        #print ununsed state transitions
-        for state in range(26, int(math.pow(2, num_state_bits))):
-            state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
-            transitions.append("1 1 " + " ".join(state_enc) + "\n")
-
-        #print final state transition
-        transitions.append("2 2\n")
-
-        # print header
-        file.write("dfa 2 {0} 3 1 1 {1}\n1\n2\n".format(num_state_bits, len(transitions)))
-
-        #print transitions
-        for transition in transitions:
-            file.write(transition)
-
-        # print labels
-        for bit in range(1, num_state_bits + 1):
-            file.write("{0} e{1}\n".format(bit, num_state_bits + 1 - bit))
-        for bit in range(1, 4):
-            file.write("{0} o{1}\n".format(num_state_bits + bit, 4 - bit))
-
-    with open("bomb_shield.dfa", "w") as file:
-
-        transitions = []
-        for state in range(1, num_steps_on_bomb + 1):
-            transitions.append("{0} 1 -1".format(state))
-
-            actions = range(8)
-            actions.remove(4) # remove stay
-            for action in actions:
-                action_enc = [str(-(idx + 2) if x == '0' else (idx + 2)) for idx, x in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-                transitions.append("{0} 1 1 {1}".format(state, " ".join(action_enc)))
-
-            action_enc = [str(-(idx + 2) if x == '0' else (idx + 2)) for idx, x in enumerate(list(bin(4)[2:].rjust(3, '0')))]
-            transitions.append("{0} {1} 1 {2}".format(state, state + 1, " ".join(action_enc)))
-
-        transitions.append("{0} {0}".format(num_steps_on_bomb + 1))
-
-        file.write("dfa {0} 1 3 1 1 {1}\n1\n{0}\n".format(num_steps_on_bomb + 1, len(transitions)))
-        file.write("\n".join(transitions))
-        file.write("\n1 b\n")
-        for bit in range(1, 4):
-            file.write("{0} o{1}\n".format(1 + bit, 4 - bit))
-
-    #shield for danger zones
-    with open("danger_zone_shield.dfa", "w") as file:
-        zone = set(danger_zone)
-        zones = {}
-        #compute zones:
-        current_zone = 1
-        while len(zone) > 0:
-            zones[current_zone] = set()
-            for (x, y) in zone:
-                at_boundary = False
-                for action in range(4):
-                    # we are looking for an action which leads for sure out of the danger zone
-                    succs = computeSuccs(x, y, action)
-                    at_boundary = True
-                    for (new_x, new_y, prob) in succs:
-                        if prob > 0 and ((new_x,new_y) in zone or (new_x,new_y,0,0) not in stateMapper):
-                            # in the danger zone
-                            at_boundary = False
-                            break
-                    if at_boundary:
-                        break
-                if at_boundary:
-                   zones[current_zone].add((x,y))
-
-            zone -= zones[current_zone]
-            current_zone += 1
-
-        # print (zones)
-
-        end_state = max_steps_in_zone + 1
-        transitions = []
-        num_state_bits = 7
-        for num_steps_in_zone in range(1,end_state):
-            print ("state " + str(num_steps_in_zone))
-            for state in xrange(0, len(reverseStateMapper) - 1, 5): #exclude error state
-                (x,y,_,_) = reverseStateMapper[state]
-                state_enc = [str(-(idx + 1) if bit == '0' else (idx + 1)) for idx, bit in enumerate(list(bin(state / 5)[2:].rjust(num_state_bits, '0')))]
-                zone_idx = 0
-                for idx, zone in zones.iteritems():
-                    if (x,y) in zone:
-                        zone_idx = idx
-                        break
-
-                if zone_idx == 0:
-                    transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
-                    continue
-                max_acceptable_zone = max_steps_in_zone - num_steps_in_zone # maximal acceptable zone as target
-                if zone_idx < max_acceptable_zone or max(zones.keys()) <= max_acceptable_zone:
-                    transitions.append("{0} {1} {2}\n".format(num_steps_in_zone, num_steps_in_zone + 1, " ".join(state_enc)))
-                    continue
-
-                print( "max_zone: " + str(max_acceptable_zone))
-                if zone_idx <= max_acceptable_zone + 1:
-                    for action in range(5):
-                        succs = computeSuccs(x, y, action)
-                        next_zone_idx = 0
-                        for (next_x,next_y,prob) in succs:
-                            if prob == 0: continue
-                            for idx, zone in zones.iteritems():
-                                if (next_x,next_y) in zone:
-                                    next_zone_idx = max(next_zone_idx, idx)
-                        print( "action " + str(action) + " leads to zone: " + str(next_zone_idx))
-                        next_state = end_state if next_zone_idx > max_acceptable_zone else (num_steps_in_zone + 1 if next_zone_idx > 0 else 1)
-                        action_enc = [str(-(idx + 1 + num_state_bits) if bit == '0' else (idx + 1 + num_state_bits)) for idx, bit in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-                        transitions.append("{0} {1} {2} {3}\n".format(num_steps_in_zone, next_state, " ".join(state_enc), " ".join(action_enc)))
-                    for action in range(5,8):
-                        action_enc = [str(-(idx + 1 + num_state_bits) if bit == '0' else (idx + 1 + num_state_bits)) for idx, bit in enumerate(list(bin(action)[2:].rjust(3, '0')))]
-                        transitions.append("{0} {1} {2} {3}\n".format(num_steps_in_zone, end_state, " ".join(state_enc), " ".join(action_enc)))
-
-                    continue
-
-                # this should never happen .. do whatever we want to
-                transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
-
-            #print ununsed state transitions
-            for state in xrange((len(reverseStateMapper) - 1) / 5, int(math.pow(2, num_state_bits))):
-                state_enc = [str(-(idx + 1) if x == '0' else (idx + 1)) for idx, x in enumerate(list(bin(state)[2:].rjust(num_state_bits, '0')))]
-                transitions.append("{0} 1 {1}\n".format(num_steps_in_zone, " ".join(state_enc)))
-
-
-        transitions.append("{0} {0}\n".format(end_state))
-        # print header
-        file.write("dfa {0} {1} 3 1 1 {2}\n1\n{0}\n".format(num_steps_in_zone + 1, num_state_bits, len(transitions)))
-
-        #print transitions
-        for transition in transitions:
-            file.write(transition)
-
-        # print labels
-        for bit in range(1, num_state_bits + 1):
-            file.write("{0} i{1}\n".format(bit, num_state_bits + 1 - bit))
-        for bit in range(1, 4):
-            file.write("{0} o{1}\n".format(num_state_bits + bit, 4 - bit))
-
-    exit()
-
 # =========================================
 # Initialize interactive display
 # =========================================
@@ -580,6 +344,12 @@ class Map(Environment):
 
         (robotXA, robotYA, csf, payoff) = reverseStateMapper[self.state]
 
+        """
+        For state_enc:
+        bits 0-3 show the agent's current position's right, down, left, up neighbors' validity;
+        bit 4 shows whether agent is currently on a bomb;
+        bit 5-13 show the three actions' binary encodings.
+        """
         # simulate sensors
         state_enc = []
         for a in range(4):
@@ -776,17 +546,17 @@ class MyExperiment(Experiment):
         old = (self.robotXA, self.robotYA)
         (self.robotXA,self.robotYA,csf,payoff) = reverseStateMapper[level.state]
 
-        if not self.isCrashed and enemies_enabled:
-            enemy_handler.update(old)
-            for e in enemy_handler.getEnemyPositions():
-                if (self.robotXA, self.robotYA) == e:
-                    self.isCrashed = True
-                    level.penalty += 1
-                    self.acc_reward -= 1
-                    if shield_options > 0 and not args.huge_neg_reward:
-                        print ("Shields are not allowed to make errors!")
-                        exit()
-                    break
+        # if not self.isCrashed and enemies_enabled:
+        #     enemy_handler.update(old)
+        #     for e in enemy_handler.getEnemyPositions():
+        #         if (self.robotXA, self.robotYA) == e:
+        #             self.isCrashed = True
+        #             level.penalty += 1
+        #             self.acc_reward -= 1
+        #             if shield_options > 0 and not args.huge_neg_reward:
+        #                 print ("Shields are not allowed to make errors!")
+        #                 exit()
+        #             break
 
         if (self.robotXA + 1, self.robotYA + 1) in bombs:
             self.bomb_counter += 1
@@ -935,12 +705,12 @@ controller = MyActionValueTable(len(reverseStateMapper) - 1, 5)
 if load_file != None:
     controller.initialize(np.fromfile(load_file))
 else:
-    controller.initialize(0.)
+    controller.initialize(0.)  # this was executed by default.
 alpha = .2
 gamma = .95
 if not args.sarsa:
     learner = MyQ(alpha, gamma, neg_reward)
-    learner.explorer = MyGreedyExplorer(shield_options, exploration)
+    # learner.explorer = MyGreedyExplorer(shield_options, exploration)
 # elif args.sarsa:
 #     learner = SARSA(alpha, gamma)
 learner.explorer = MyGreedyExplorer(shield_options, exploration)
