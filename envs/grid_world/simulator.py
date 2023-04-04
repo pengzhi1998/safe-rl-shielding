@@ -317,7 +317,7 @@ class Map(Environment):
         self.penalty = 0
 
     def performAction(self, action):
-        error = len(reverseStateMapper) - 1 # error state, 310
+        error = len(reverseStateMapper) - 1  # error state, 310
         # action = int(action[0])
 
         """
@@ -331,6 +331,9 @@ class Map(Environment):
         action = [ 3.  2.  3. -1. -1.], actions = [ 3.  2.  3.]
         actions after "list(map())" = [3, 2, 3]
         encoded_actions = [[0, 1, 1], [0, 1, 0], [0, 1, 1]] 
+        The reason why the input is a list with size 5 is because there are intotal 5 possible actions, right, down, 
+        left, up, and stay. However, we only care about three shielding-options, so the rest 2 actions are set to -1. 
+        For example, in the above first example, the agent would firstly take action 4 with priority.
         """
         actions = action[action != -1]
         actions = list(map(int, actions))
@@ -338,6 +341,10 @@ class Map(Environment):
         # print action
         # state_enc = map(int, list(bin(self.state / (NUMBER_OF_COLORS + 1))[2:].rjust(NUMBER_OF_BITS, '0')))
 
+        """
+        As shown in the examples from the comment above, we could see the encoded_actions is just the binary encoding
+        for the three actions.
+        """
         encoded_actions = []
         for a in actions:
             encoded_actions.append(list(map(int, list(bin(a)[2:].rjust(3, '0')))))

@@ -70,14 +70,14 @@ class MyGreedyExplorer(Explorer):
 
         values = self.module.getActionValues(self.state)
 
-        actions = []
-        if random() <= self.exploration:
+        actions = []  # self.exploration is chosen to be 0.2
+        if random() <= self.exploration:  # this is the random action
             for i in range(self.shield_options):
                 new_action = choice(range(len(values)))
                 np.delete(values, new_action)
                 actions.append(new_action)
         else:
-            for i in range(self.shield_options):
+            for i in range(self.shield_options):  # this is to choose the actions with the highest values
                 new_action = where(values == max(values))[0]
                 new_action = choice(new_action)
                 np.delete(values, new_action)
