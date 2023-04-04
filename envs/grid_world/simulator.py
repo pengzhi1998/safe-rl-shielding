@@ -427,6 +427,16 @@ class Map(Environment):
         while len(used_actions) < 5:
             used_actions.append(-1)
 
+        """
+        In the code above, the used_actions is a list with size 5, with the tried actions and values -1.
+        For example:
+        (1)
+        if the corr_action is 2 (choosing action 2, this is computed based on the actions binary encodings and 
+        shielding), and the actions are [2, 1, 3], then the used_actions would be [2, -1, -1, -1, -1].
+        (2)
+        if the corr_action is 0 (choosing action 0, this is computed based on the actions binary encodings and 
+        shielding), and the actions are [3, 1, 0], then the used_actions would be [3, 1, 0, -1, -1].
+        """
         agent.lastaction = used_actions
 
         transitionList = transitionLists[(self.state, action)]
