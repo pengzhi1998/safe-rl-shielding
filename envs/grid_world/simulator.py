@@ -448,7 +448,7 @@ class Map(Environment):
                 dest = a
                 randomNumber = 123.0
             else:
-                randomNumber -= b
+                randomNumber -= b  # in this example, b would always be 0, while randomNumber seems to be useless here.
         # Rounding error?
         if (dest==None):
             dest = transitionList[0][0]
@@ -582,7 +582,7 @@ class MyExperiment(Experiment):
                 level.penalty += 1
                 self.acc_reward -= 1
                 if shield_options > 0 and not args.huge_neg_reward:
-                    print ("Shields are not allowed to make errors!")
+                    print ("Shields are not allowed to make errors! Stay in the bomb for 4 steps")
                     exit()
         else:
             self.bomb_counter = 0
